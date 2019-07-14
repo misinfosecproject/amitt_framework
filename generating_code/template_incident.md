@@ -18,5 +18,3 @@
 
 * Techniques used: 
 {techniques}
-
-DO NOT EDIT ABOVE THIS LINE - PLEASE ADD NOTES BELOW
