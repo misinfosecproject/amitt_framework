@@ -9,3 +9,9 @@
 * Summary: {summary}
 
 * Phase: {phase}
+
+* Tasks:
+{tasks}
+
+* Techniques: 
+{techniques}
