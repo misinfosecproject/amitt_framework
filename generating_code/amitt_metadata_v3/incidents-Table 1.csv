@@ -1,0 +1,121 @@
+id,name,type,summary,Year Started,From country,To country,URL(s),Notes,When added,Found via
+I00001,Blacktivists facebook group,incident,,2016,Russia,USA,https://money.cnn.com/2017/09/28/media/blacktivist-russia-facebook-twitter/index.html,,2019-02-24,
+I00002,#VaccinateUS,campaign,,2014,Russia,World,https://www.washingtonpost.com/science/2018/08/23/russian-trolls-twitter-bots-exploit-vaccine-controversy/,,2019-02-24,
+I00003,Beyonce protest rallies,incident,,2016,Russia,USA,https://www.theguardian.com/us-news/2018/may/10/russia-facebook-ads-us-elections-congress,,2019-02-24,
+I00004,#Macrongate,incident,,2017,Russia,France,http://www.niemanlab.org/2018/09/how-france-beat-back-information-manipulation-and-how-other-democracies-might-do-the-same/,,2019-02-24,
+I00005,Brexit vote,campaign,,2016,Russia,UK,https://www.forbes.com/sites/emmawoollacott/2018/11/01/russian-trolls-used-islamophobia-to-whip-up-support-for-brexit/#1369afb665f2,,2019-02-24,
+I00006,Columbian Chemicals,incident,,2014,Russia,USA,https://en.wikipedia.org/wiki/Columbian_Chemicals_Plant_explosion_hoax,,2019-02-24,
+I00007,Incirlik terrorists,incident,,2016,Russia,USA,https://www.politifact.com/truth-o-meter/statements/2016/aug/16/paul-manafort/trump-campaign-chair-misquotes-russian-media-makes/,,2019-02-24,
+I00008,Bujic,incident,,2017,Russia,Serbia,https://www.stopfake.org/en/vencislav-the-virgin-hostile-operation-by-vencislav-bujic-seas-foundation-and-its-network-of-collaborators/,Serbia pro-Kremlin disinfo campaign by Vencislav Bujic,2019-02-24,
+I00009,PhilippinesExpert,incident,,2017,Russia,Philippines,https://codastory.com/disinformation/how-a-little-known-pro-kremlin-analyst-became-a-philippine-expert-overnight/,Philippines Social Media: Russian Disinformation by fake “expert”,2019-02-24,
+I00010,ParklandTeens,incident,,2018,??,USA,https://www.nytimes.com/2018/03/27/us/parkland-students-hogg-gonzalez.html,Parkland survivors,2019-02-01,
+I00011,CovingtonTeen,incident,,2019,??,USA,https://www.wcpo.com/news/national/fact-check-viral-misinformation-about-covington-catholic-nathan-phillips-infects-the-internet,MAGA kid (Covington),2019-02-01,
+I00012,ChinaSmog,incident,,2011,China,China,https://www.cjr.org/innovations/memes-pollution-censorship-china-beijing.php,"China smog (not an attack, but a counter to disinformation)",2019-02-24,
+I00013,FranceBlacktivists,incident,,2014,Russia,France,https://medium.com/dfrlab/trolltracker-glimpse-into-a-french-operation-f78dcae78924,France blacktivists,2019-02-24,
+I00014,GiletsJaunePileon,incident,,2018,Russia,France,https://www.wired.com/story/co-opting-french-unrest-spread-disinformation/,Russian pile-onto #GiletsJaune (and expansion to other countries),2019-02-24,
+I00015,ConcordDiscovery,incident,,2019,Russia,USA,https://www.theatlantic.com/politics/archive/2019/02/new-mueller-filing-shows-how-russia-misuses-us-courts/581884/,,2019-02-01,
+I00016,LithuanianElves,campaign,,2014,Russia,Lithuania,https://www.ft.com/content/b3701b12-2544-11e9-b329-c7e6ceb5ffdf,,2019-02-01,
+I00017,US presidential elections,campaign,,2016,Russia,USA,https://www.dni.gov/files/documents/ICA_2017_01.pdf,,2019-02-24,OII
+I00018,DNC email leak incident,tactic,,2016,Russia,USA,,"Channels: RU domestic, RU multilingual (RT/Sputnik), trolls. OII",2019-02-24,OII
+I00019,MacronTiphaine,incident,,2017,unknown,France,https://www.buzzfeednews.com/article/ryanhatesthis/heres-how-far-right-trolls-are-spreading-hoaxes-about,Trolls OII,2019-02-24,OII
+I00020,3000 tanks,incident,,2017,Russia,World,https://medium.com/@DFRLab/three-thousand-fake-tanks-575410c4f64d,,2019-02-24,OII
+I00021,Armenia elections,campaign,,2017,Russia,Armenia,https://medium.com/dfrlab/fakes-bots-and-blockings-in-armenia-44a4c87ebc46,,2019-02-24,OII
+I00022,#Macronleaks,incident,,2017,Russia,France,https://medium.com/dfrlab/hashtag-campaign-macronleaks-4a3fb870c4e8,,2019-02-24,OII
+I00023,#dislikemacron,incident,,2017,Russia,France,https://medium.com/dfrlab/russian-and-french-twitter-mobs-in-election-push-bca327aa41a5,unsuccessful,2019-02-24,OII
+I00024,#syriahoax,incident,,2017,Syria,USA,https://medium.com/dfrlab/how-the-alt-right-brought-syriahoax-to-america-47745118d1c9,,2019-02-24,OII
+I00025,EU Army,incident,,2018,Russia,EU,https://medium.com/dfrlab/spread-it-on-reddit-3170a463e787,,2019-02-24,OII
+I00026,Netherlands referendum on Ukraine,incident,,2016,Russia,Netherlands,https://www.washingtonpost.com/opinions/russias-influence-in-western-elections/2016/04/08/b427602a-fcf1-11e5-886f-a037dba38301_story.html,,2019-02-24,OII
+I00027,crucifiedboy,incident,,2014,Russia,Ukraine,https://helda.helsinki.fi//bitstream/handle/10138/233374/KhaldarovaPanttiFakeNews.pdf?sequence=1,,2019-02-24,OII
+I00028,mh17 downed,incident,,2014,Russia,Ukraine,https://www.stopfake.org/en/lies-spanish-flight-operations-officer-from-kiev-informed-about-ukrainian-planes-involved-in-boeing-tragedy/%20https:/globalvoices.org/2014/07/20/the-russian-governments-7000-wikipedia-edits/%20https:/foreignpolicy.com/2016/09/29/how-mh17-gave-birth-to-the-modern-russian-spin-machine-putin-ukraine/,,2019-02-24,OII
+I00029,MH17 investigation,campaign,,2016,Russia,Ukraine,https://www.novayagazeta.ru/news/2015/05/07/112052-facebook-zablokiroval-sergeya-parhomenko-za-kommentariy-doklada-o-sbitom-171-boinge-187%20 https://news.online.ua/754036/v-sotssetyah-na-paltsah-pokazali-kak-rabotayut-boty-kremlya-opublikovany-foto/ https://www.mirror.co.uk/news/world-news/ukraine-involved-mh17-downing-claims-14184413,"Changed to campaign (still in the news, and still Russia accusing Ukraine... TASS 03/25/19 and UK Daily Mirror (see URL's). It's links to overall campaign directed against Ukraine",2019-02-24,OII
+I00030,LastJedi,incident,,2018,Russia,World,https://slate.com/culture/2018/10/last-jedi-star-wars-twitter-backlash-russia-trolls.html,,2019-02-24,OII
+I00031,antivax,apt,,2018,Russia,World,https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.2018.304567,,2019-02-24,OII
+I00032,Kavanaugh,incident,,2018,Russia,USA,https://qz.com/1409102/russian-trolls-and-bots-are-flooding-twitter-with-ford-kavanaugh-disinformation/,,2019-02-24,OII
+I00033,China 50cent Army,apt,,2014,China,China,https://gking.harvard.edu/files/gking/files/how_the_chinese_government_fabricates_social_media_posts_for_strategic_distraction_not_engaged_argument.pdf https://www.voanews.com/a/who-is-that-chinese-troll/3540663.html,"campaign (multiple incidents, e.g. Shanshan riots)",2019-02-24,OII
+I00034,DibaFacebookExpedition,incident,,2016,China,Taiwan,https://www.ideals.illinois.edu/handle/2142/96746 https://qz.com/598812/an-army-of-chinese-trolls-has-jumped-the-great-firewall-to-attack-taiwanese-independence-on-facebook/,,2019-02-24,OII
+I00035,Brazilelections,campaign,,2014,Brazil,Brazil,https://blogs.oii.ox.ac.uk/politicalbots/wp-content/uploads/sites/89/2017/06/Comprop-Brazil-1.pdf,,2019-02-24,OII
+I00036,BrazilPresDebate,incident,,2014,Brazil,Brazil,https://www.wilsoncenter.org/blog-post/bots-brazil-the-activity-social-media-bots-brazilian-elections,,2019-02-24,OII
+I00037,Rioelections,incident,,2016,Brazil,Brazil,https://www1.folha.uol.com.br/poder/eleicoes-2016/2016/10/1823713-eleicao-no-rio-tem-tatica-antiboato-e-suspeita-de-uso-de-robos.shtml,,2019-02-24,OII
+I00038,Brazilimpeachment,incident,,2016,Brazil,Brazil,http://www.labic.net/cartografia/a-rede-das-imagens-da-vaiadilma-novas-relacoes/ https://www.researchgate.net/publication/300415619_The_Influence_of_Retweeting_Robots_During_Brazilian_Protests,,2019-02-24,OII
+I00039,MerkelFacebook,incident,,2017,unknown,Germany,https://www.buzzfeed.com/albertonardelli/hyperpartisan-sites-and-facebook-pages-are-publishing-false,,2019-02-24,OII
+I00040,modamaniSelfie,incident,,2015,unknown,Germany,https://www.nytimes.com/2017/02/06/business/syria-refugee-anas-modamani-germany-facebook.html,,2019-02-24,OII
+I00041,Refugee crime map,incident,,2017,unknown,Germany,https://uebermedien.de/11488/kartenlegen-mit-kriminellen-auslaendern/,,2019-02-24,OII
+I00042,Saudi/Qatar bot dispute,incident,,2017,SaudiArabia,Qatar,https://jia.sipa.columbia.edu/robot-wars-how-bots-joined-battle-gulf,"robot wars how bots joined battle in the gulf""",2019-02-24,MIS
+I00043,FCC comments,incident,,2017,unknown,USA,https://gizmodo.com/how-an-investigation-of-fake-fcc-comments-snared-a-prom-1832788658,"does this count as an incident, or is it just hacking as usual?",2019-02-24,MIS
+I00044,JadeHelm exercise,incident,,2015,,USA,https://www.politifact.com/texas/article/2018/may/03/jade-helm-15-greg-abbott-texas-state-guard-hayden-/,,2019-02-25,MIS
+I00045,Skripal,incident,,2018,Russia,UK,https://www.bellingcat.com/tag/skripal/ https://euvsdisinfo.eu/conspiracy-mania-marks-one-year-anniversary-of-the-skripal-poisoning/,This is Beliingcat's full library of Skirpal related reporting,2019-03-20,
+I00046,North Macedonia,incident,,2018,Russia,Macedonia,https://www.nytimes.com/2018/09/16/world/europe/macedonia-referendum-russia-nato.html https://www.polygraph.info/a/disinfo-analysis-macedonia-nato-russia/29770631.html,disinformation directed by Russian-backed groups trying to stoke fears and depress turnout in a vote that could put this Balkan nation on a path to join NATO.,2019-03-20,
+I00047,Sea of Azov,incident,,2018,Russia,World,https://euvsdisinfo.eu/wave-of-disinformation-from-the-azov-sea/,,2019-03-20,
+I00048,White Helmets,campaign,,2015,Russia,World,https://thesyriacampaign.org/wp-content/uploads/2017/12/KillingtheTruth.pdf https://www.theguardian.com/world/2017/dec/18/syria-white-helmets-conspiracy-theories,,2019-03-20,
+I00049,White Helmets: Chemical Weapons,incident,,2017,Russia,World,http://www.publications.atlanticcouncil.org/breakingghouta/disinformation-2/  https://www.bellingcat.com/news/mena/2018/12/18/chemical-weapons-and-absurdity-the-disinformation-campaign-against-the-white-helmets/ https://www.nybooks.com/daily/2018/10/16/why-assad-and-russia-target-the-white-helmets/,,2019-03-20,
+I00050,#HandsOffVenezuela,incident,,2019,Russia,World,https://euvsdisinfo.eu/twitter-as-an-information-battlefield-venezuela-a-case-study/,,2019-03-20,
+I00051,Integrity Initiative,incident,,2018,Russia,World,https://eaworldview.com/2019/01/counter-russia-disinformation-integrity-initiative/ https://www.stopfake.org/en/kremlin-watch-briefing-the-eu-has-to-start-taking-pro-kremlin-disinformation-seriously/,"This is an excellent example of the tables getting turned, and how we need to carefully work through offensive measures",2019-03-20,
+I00052,China overiew,campaign,,2015,China,World,https://www.recordedfuture.com/china-social-media-operations/,"global strategic goals for China different from those President Vladimir Putin has for Russia; as a result, the social media influence techniques used by China are different from those used by Russia.",2019-03-20,
+I00053,China Huawei CFO Arrest,incident,,2018,China,World,https://www.theatlantic.com/international/archive/2019/03/czech-zeman-babis-huawei-xi-trump/584158/ https://www.theglobeandmail.com/politics/article-chinas-envoy-says-white-supremacy-played-part-in-canadas-arrest-of/,"“The Chinese have been very active here,” said General Andor Šándor, a former chief of the Czech military-intelligence service who is now a security consultant. “They don’t want to undermine our relationship with NATO, or the EU, unlike the Russians. What they are really keen on is to squeeze as much technological information from us as possible.”",2019-03-20,
+I00054,China Muslims,incident,,2018,China,World,https://www.ctvnews.ca/world/china-says-foreign-concerns-over-muslim-rights-unwarranted-1.4178042 https://www.reuters.com/investigates/special-report/muslims-camps-china/,"China rejects the allegations that it has locked up large numbers of Muslims in re-education camps. The facilities, it says, are vocational training centers that emphasize “rehabilitation and redemption” and are part of its efforts to combat terrorism and religious extremism.",2019-03-20,
+I00055,50 Cent Army,campaign,,2008,China,World,https://www.voanews.com/a/who-is-that-chinese-troll/3540663.html,,2019-03-20,
+I00056,Iran Influence Operations,campaign,,2012,Iran,World,https://www.fireeye.com/blog/threat-research/2018/08/suspected-iranian-influence-operation.html https://www.reuters.com/article/us-cyber-iran-specialreport/special-report-how-iran-spreads-disinformation-around-the-world-idUSKCN1NZ1FT https://www.reuters.com/article/us-cyber-iran-specialreport/special-report-how-iran-spreads-disinformation-around-the-world-idUSKCN1NZ1FT https://www.rand.org/blog/2018/08/irans-disinformation-campaigns.html https://medium.com/dfrlab/takedown-details-of-the-iranian-propaganda-network-d1fad32fdf30 https://medium.com/dfrlab/trolltracker-outward-influence-operation-from-iran-cc4539684c8dhttps://comprop.oii.ox.ac.uk/wp-content/uploads/sites/93/2019/04/Iran-Memo.pdf,"FireEye has identified a suspected influence operation that appears to originate from Iran aimed at audiences in the U.S., U.K., Latin America, and the Middle East.",2019-03-20,
+I00057,Mexico Election,incident,,2018,Russia/domestic,Mexico,https://www.smh.com.au/world/north-america/misinformation-seeded-by-bots-and-trolls-invades-mexico-s-election-20180502-p4zctx.html https://medium.com/dfrlab/electionwatch-russian-bots-in-mexico-46003fcab4,,2019-03-20,
+I00058,Chemnitz,incident,,2018,Russia,Germany,https://www.thebureauinvestigates.com/stories/2018-09-04/chemnitz-far-right-alternative-news http://www.spiegel.de/international/germany/merkel-facing-turbulence-after-right-wing-unrest-a-1228121.html,,2019-03-20,
+I00059,Myanmar - Rohingya ,campaign,,2014,Myanmar,Myanmar,https://www.reuters.com/investigates/special-report/myanmar-facebook-hate/ https://www.nytimes.com/2018/10/15/technology/myanmar-facebook-genocide.html?action=click&module=Top%20Stories&pgtype=Homepage https://www.lawfareblog.com/facebooks-role-genocide-myanmar-new-reporting-complicates-narrative,Personal note (see Reuters side bar... end of article) JFG contributed research re: Twitter,2019-03-20,
+I00060,White Genocide,campaign,,2018,Russia,World,https://www.smh.com.au/world/oceania/the-high-price-of-white-genocide-politics-for-australia-20180724-p4zt9k.html https://www.theatlantic.com/politics/archive/2018/08/trump-white-nationalism/568393/ https://www.iafrikan.com/2018/11/20/social-media-usa-south-africa-fake-news-disinformation/,Personal note (see Reuters side bar... end of article) JFG contributed research re: Twitter,2019-03-20,
+I00061,Military veterans Targetting,campaign,,2017,Russia,US,https://www.stripes.com/congressmen-urge-fbi-to-investigate-bots-targeting-veterans-with-fake-news-1.573284 https://www.voanews.com/a/russia-influence-operations-taking-aim-at-us-military/4640751.html  https://www.washingtonpost.com/news/the-switch/wp/2017/10/09/russian-operatives-used-twitter-and-facebook-to-target-veterans-and-military-personnel-study-says/?utm_term=.d6fa34d4819c https://comprop.oii.ox.ac.uk/research/working-papers/vetops/,,2019-03-20,
+I00062,Brexit/UK ongoing,campaign,,2015,Russia/domestic,UK,https://www.politico.eu/article/britain-nationalist-dark-web-populism-tommy-robinson/? http://www.europarl.europa.eu/thinktank/en/document.html?reference=EPRS_STU(2019)634414,"This is current, and offers very good ""Anatomy of an ecosystem"" / EuroParl Think tank study... this is good CASE STUDY I: THE BREXIT CAMPAIGN and this Polarisation by manipulation",2019-03-20,
+I00063,Olympic Doping Scandal,campaign,,2016,Russia,World,https://www.nytimes.com/2016/05/13/sports/russia-doping-sochi-olympics-2014.html?module=inline,,2019-04-06,
+I00064,,,,,,,,,,
+I00065,,,,,,,,,,
+I00066,,,,,,,,,,
+I00067,,,,,,,,,,
+I00068,,,,,,,,,,
+I00069,,,,,,,,,,
+I00070,,,,,,,,,,
+I00071,,,,,,,,,,
+I00072,,,,,,,,,,
+I00073,,,,,,,,,,
+I00074,,,,,,,,,,
+I00075,,,,,,,,,,
+I00076,,,,,,,,,,
+I00077,,,,,,,,,,
+I00078,,,,,,,,,,
+I00079,,,,,,,,,,
+I00080,,,,,,,,,,
+I00081,,,,,,,,,,
+I00082,,,,,,,,,,
+I00083,,,,,,,,,,
+I00084,,,,,,,,,,
+I00085,,,,,,,,,,
+I00086,,,,,,,,,,
+I00087,,,,,,,,,,
+I00088,,,,,,,,,,
+I00089,,,,,,,,,,
+I00090,,,,,,,,,,
+I00091,,,,,,,,,,
+I00092,,,,,,,,,,
+I00093,,,,,,,,,,
+I00094,,,,,,,,,,
+I00095,,,,,,,,,,
+I00096,,,,,,,,,,
+I00097,,,,,,,,,,
+I00098,,,,,,,,,,
+I00099,,,,,,,,,,
+I00100,,,,,,,,,,
+I00101,,,,,,,,,,
+I00102,,,,,,,,,,
+I00103,,,,,,,,,,
+I00104,,,,,,,,,,
+I00105,,,,,,,,,,
+I00106,,,,,,,,,,
+I00107,,,,,,,,,,
+I00108,,,,,,,,,,
+I00109,,,,,,,,,,
+I00110,,,,,,,,,,
+I00111,,,,,,,,,,
+I00112,,,,,,,,,,
+I00113,,,,,,,,,,
+I00114,,,,,,,,,,
+I00115,,,,,,,,,,
+I00116,,,,,,,,,,
+I00117,,,,,,,,,,
+I00118,,,,,,,,,,
+I00119,,,,,,,,,,
+I00120,,,,,,,,,,

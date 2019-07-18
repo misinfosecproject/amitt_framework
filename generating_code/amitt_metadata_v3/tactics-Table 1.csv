@@ -1,0 +1,13 @@
+id,name,phase,rank,summary
+TA01,Strategic Planning,P01,1,
+TA02,Objective Planning,P01,2,
+TA03,Develop People,P02,3,
+TA04,Develop Networks,P02,4,
+TA05,Microtargeting,P02,5,
+TA06,Develop Content,P02,6,
+TA07,Channel Selection,P02,7,
+TA08,Pump Priming,P03,8,
+TA09,Exposure,P03,9,
+TA10,Go Physical,P03,10,
+TA11,Persistence,P03,11,
+TA12,Measure Effectiveness,P04,12,
