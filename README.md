@@ -19,6 +19,14 @@ There's a directory for each of these entities, containing a datasheet for each 
 
 The framework was created by finding and analysing a set of existing misinformation [incidents](incidents.md), which also have room for more notes.
 
+## Updating the fileset
+
+The code to create all the datasheets is in directory generating_code
+
+* Metadata is in the file amitt_metadata_v3.xlsx
+* If you change something in the metadata file, go into generating_code, and type "python amitt.py" - this will update the metadata in all the datasheets, and create a datasheet each for any new objects you've added to the spreadsheet.
+* If you don't have any datasheets yet, use "python amitt.py" to create them all. 
+
 ## Provenance
 
 AMITT was created by the Credibilty Coalition's [Misinfosec working group](https://github.com/credcoalition/community-site/wiki/Working-Groups), which is the standards group connected to Misinfosec.  We would love any and all suggestions for improvements, comments and offers of help via the issues list on this github. 
