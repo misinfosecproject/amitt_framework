@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import json
 import uuid
+import xlrd
 
 class Amitt:
     ''' Manage AMITT metadata
