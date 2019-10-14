@@ -37,6 +37,8 @@ class Amitt:
         self.stix_created_by = str(uuid.uuid4())
         self.stix_marking_definition = str(uuid.uuid4())
         self.stix_creation_timestamp = datetime.now().isoformat()
+        self.stix_tactic_uuid = {}
+        self.stix_technique_uuid = {}
 
     def make_object_dict(self, df):
         return(pd.Series(df.name.values,index=df.id).to_dict())
@@ -63,25 +65,25 @@ class Amitt:
     def make_amitt_tactic(self):
         """
         {
-            'created_by_ref': 'identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5',
-            'description': 'The adversary is trying to gather data of interest to their goal.\n\nCollection consists of techniques adversaries may use to gather information and the sources information is collected from that are relevant to following through on the adversary's objectives. Frequently, the next goal after collecting data is to steal (exfiltrate) the data. Common target sources include various drive types, browsers, audio, video, and email. Common collection methods include capturing screenshots and keyboard input.',
-            'type': 'x-mitre-tactic',
-            'id': 'x-mitre-tactic--d108ce10-2419-4cf9-a774-46161d6c6cfe',
-            'object_marking_refs': [
-                'marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168'
-            ],
-            'name': 'Collection',
-            'external_references': [
+            "created": "2018-10-17T00:14:20.652Z",
+            "created_by_ref": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
+            "description": "The adversary is trying to move through your environment.\n\nLateral Movement consists of techniques that adversaries use to enter and control remote systems on a network. Following through on their primary objective often requires exploring the network to find their target and subsequently gaining access to it. Reaching their objective often involves pivoting through multiple systems and accounts to gain. Adversaries might install their own remote access tools to accomplish Lateral Movement or use legitimate credentials with native network and operating system tools, which may be stealthier. ",
+            "external_references": [
                 {
-                    'external_id': 'TA0009',
-                    'source_name': 'mitre-attack',
-                    'url': 'https://attack.mitre.org/tactics/TA0009'
+                    "external_id": "TA0008",
+                    "source_name": "mitre-attack",
+                    "url": "https://attack.mitre.org/tactics/TA0008"
                 }
             ],
-            'x_mitre_shortname': 'collection',
-            'modified': '2019-07-19T17:44:53.176Z',
-            'created': '2018-10-17T00:14:20.652Z'
-        },
+            "id": "x-mitre-tactic--7141578b-e50b-4dcc-bfa4-08a8dd689e9e",
+            "modified": "2019-07-19T17:44:36.953Z",
+            "name": "Lateral Movement",
+            "object_marking_refs": [
+                "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
+            ],
+            "type": "x-mitre-tactic",
+            "x_mitre_shortname": "lateral-movement"
+        }
         :return:
         """
         # Tactics format:
@@ -90,70 +92,79 @@ class Amitt:
 
         for tac in tactics:
             tactic = {}
+            tactic['created'] = f'{self.stix_creation_timestamp}'
             tactic['created_by_ref'] = f'identity--{self.stix_created_by}'
             tactic['description'] = f'{tac[4]}'
-            tactic['type'] = 'x-mitre-tactic'
-            tactic['id'] = f'x-mitre-tactic--{str(uuid.uuid4())}'
-            tactic['object_marking_refs'] = [
-                f'marking-definition--{self.stix_marking_definition}'
-            ]
-            tactic['name'] = f'{tac[1]}'
             tactic['external_references'] = [
                 {
-                    'external_id': f'{tac[4]}',
-                    'source_name': 'amitt-attack',
+                    'external_id': f'{tac[0]}',
+                    'source_name': 'mitre-attack',
                     'url': f'https://github.com/misinfosecproject/amitt_framework/blob/master/tactics/{tac[0]}.md'
                 }
             ]
-            tactic['x_mitre_shortname'] = f'{tac[1]}'
+            tactic['id'] = f'x-mitre-tactic--{str(uuid.uuid4())}'
             tactic['modified'] = f'{self.stix_creation_timestamp}'
-            tactic['created'] = f'{self.stix_creation_timestamp}'
+            tactic['name'] = f'{tac[1]}'
+            tactic['object_marking_refs'] = [
+                f'marking-definition--{self.stix_marking_definition}'
+            ]
+            tactic['type'] = 'x-mitre-tactic'
+            tactic['x_mitre_shortname'] = f'{tac[1]}'.replace(' ', '-').lower()
 
+            # Add the tactic to the STIX bundle.
             self.stix_bundle['objects'].append(tactic)
 
+            # Map the tactic external ID to the x-mitre-tactic uuid for use in x-mitre-matrix.
+            self.stix_tactic_uuid[tac[0]] = tactic['id']
 
     def make_amitt_technique(self):
         """
         {
-            'external_references': [
+            "created": "2017-05-31T21:30:22.096Z",
+            "created_by_ref": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
+            "description": "Some security tools inspect files with static signatures to determine if they are known malicious. Adversaries may add data to files to increase the size beyond what security tools are capable of handling or to change the file hash to avoid hash-based blacklists.",
+            "external_references": [
                 {
-                    'url': 'https://github.com/misinfosecproject/amitt_framework/blob/master/techniques/T0007.md',
-                    'source_name': 'amitt-technique',
-                    'external_id': 'T1025'
+                    "external_id": "T1009",
+                    "source_name": "mitre-attack",
+                    "url": "https://attack.mitre.org/techniques/T1009"
+                },
+                {
+                    "external_id": "CAPEC-572",
+                    "source_name": "capec",
+                    "url": "https://capec.mitre.org/data/definitions/572.html"
                 }
             ],
-            'object_marking_refs': [
-                'marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168'
-            ],
-            'x_mitre_system_requirements': [
-                'Privileges to access removable media drive and files'
-            ],
-            'x_mitre_data_sources': [
-                'File monitoring',
-                'Process monitoring',
-                'Process command-line parameters'
-            ],
-            'modified': '2018-10-17T00:14:20.652Z',
-            'x_mitre_detection': 'Monitor processes and command-line arguments for actions that could be taken to collect files from a system's connected removable media. Remote access tools with built-in features may interact directly with the Windows API to gather data. Data may also be acquired through Windows system management tools such as [Windows Management Instrumentation](https://attack.mitre.org/techniques/T1047) and [PowerShell](https://attack.mitre.org/techniques/T1086).',
-            'created_by_ref': 'identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5',
-            'x_mitre_platforms': [
-                'Linux',
-                'macOS',
-                'Windows'
-            ],
-            'kill_chain_phases': [
+            "id": "attack-pattern--519630c5-f03f-4882-825c-3af924935817",
+            "kill_chain_phases": [
                 {
-                    'phase_name': 'collection',
-                    'kill_chain_name': 'mitre-attack'
+                    "kill_chain_name": "mitre-attack",
+                    "phase_name": "defense-evasion"
                 }
             ],
-            'id': 'attack-pattern--1b7ba276-eedc-4951-a762-0ceea2c030ec',
-            'name': 'Data from Removable Media',
-            'created': '2017-05-31T21:30:31.584Z',
-            'x_mitre_version': '1.0',
-            'type': 'attack-pattern',
-            'description': 'Sensitive data can be collected from any removable media (optical disk drive, USB memory, etc.) connected to the compromised system prior to Exfiltration.\n\nAdversaries may search connected removable media on computers they have compromised to find files of interest. Interactive command shells may be in use, and common functionality within [cmd](https://attack.mitre.org/software/S0106) may be used to gather information. Some adversaries may also use [Automated Collection](https://attack.mitre.org/techniques/T1119) on removable media.'
-        },
+            "modified": "2019-01-31T19:18:29.228Z",
+            "name": "Binary Padding",
+            "object_marking_refs": [
+                "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
+            ],
+            "type": "attack-pattern",
+            "x_mitre_data_sources": [
+                "Binary file metadata",
+                "File monitoring",
+                "Malware reverse engineering"
+            ],
+            "x_mitre_defense_bypassed": [
+                "Signature-based detection",
+                "Anti-virus"
+            ],
+            "x_mitre_detection": "Depending on the method used to pad files, a file-based signature may be capable of detecting padding using a scanning or on-access based tool. \n\nWhen executed, the resulting process from padded files may also exhibit other behavior characteristics of being used to conduct an intrusion such as system and network information Discovery or Lateral Movement, which could be used as event indicators that point to the source file.",
+            "x_mitre_platforms": [
+                "Linux",
+                "macOS",
+                "Windows"
+            ],
+            "x_mitre_version": "1.0"
+        }
         :return:
         """
         # Techniques format:
@@ -161,36 +172,120 @@ class Amitt:
         techniques = self.techniques.values.tolist()
 
         for tech in techniques:
+            if tech[1] != tech[1]:
+                tech[1] = ''
+
+            if tech[2] != tech[2]:
+                tech[2] = ''
+
+            if tech[3] != tech[3]:
+                tech[3] = ''
+
+            if tech[1] == tech[2] == tech[3] == '':
+                continue
+
             technique = {}
+            technique['created'] = f'{self.stix_creation_timestamp}'
+            technique['created_by_ref'] = f'identity--{self.stix_created_by}'
+            technique['description'] = f'{tech[3]}'
             technique['external_references'] = [
                 {
                     'external_id': f'{tech[0]}',
-                    'source_name': 'amitt-attack',
+                    'source_name': 'mitre-attack',
                     'url': f'https://github.com/misinfosecproject/amitt_framework/blob/master/techniques/{tech[0]}.md'
                 }
             ]
+            technique['id'] = f'attack-pattern--{str(uuid.uuid4())}'
+            # technique['kill_chain_phases'] = [
+            #     {
+            #         'phase_name': self.tacdict[tech[2]].replace(' ', '-').lower(),
+            #         'kill_chain_name': 'mitre-attack'
+            #     }
+            # ]
+            technique['kill_chain_phases'] = [
+                {
+                    'phase_name': self.tacdict[tech[2]].replace(' ', '-').lower(),
+                    'kill_chain_name': 'mitre-attack'
+                }
+            ]
+            technique['modified'] = f'{self.stix_creation_timestamp}'
+            technique['name'] = f'{tech[1]}'
+
             technique['object_marking_refs'] = [
                 f'marking-definition--{self.stix_marking_definition}'
             ]
-            technique['modified'] = f'{self.stix_creation_timestamp}'
-            technique['created_by_ref'] = f'identity--{self.stix_created_by}'
-            technique['kill_chain_phases']: [
-                {
-                    'phase_name': f'{self.tacdict[tech[2]]}',
-                    'kill_chain_name': 'amitt-attack'
-                }
-            ]
-            technique['id'] = f'attack-pattern--{str(uuid.uuid4())}'
-            technique['name'] = f'{tech[1]}'
-            technique['created'] = f'{self.stix_creation_timestamp}'
-            technique['x_mitre_version'] = '3.0'
             technique['type'] = 'attack-pattern'
-            technique['description'] = f'{tech[3]}'
+            technique['x_mitre_platforms'] = [
+                "Linux",
+                "macOS",
+                "Windows"
+            ],
+            technique['x_mitre_version'] = '1.0'
 
+            # Add the technique to the STIX bundle.
             self.stix_bundle['objects'].append(technique)
 
-    def make_amitt_investigation(self):
-        pass
+    def make_amitt_matrix(self):
+        """
+                {
+          "created": "2018-10-17T00:14:20.652Z",
+          "created_by_ref": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
+          "description": "The full ATT&CK Matrix includes techniques spanning Windows, Mac, and Linux platforms and can be used to navigate through the knowledge base.",
+          "external_references": [
+            {
+              "external_id": "enterprise-attack",
+              "source_name": "mitre-attack",
+              "url": "https://attack.mitre.org/matrices/enterprise"
+            }
+          ],
+          "id": "x-mitre-matrix--eafc1b4c-5e56-4965-bd4e-66a6a89c88cc",
+          "modified": "2019-04-16T21:39:18.247Z",
+          "name": "Enterprise ATT&CK",
+          "object_marking_refs": [
+            "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
+          ],
+          "tactic_refs": [
+            "x-mitre-tactic--ffd5bcee-6e16-4dd2-8eca-7b3beedf33ca",
+            "x-mitre-tactic--4ca45d45-df4d-4613-8980-bac22d278fa5",
+            "x-mitre-tactic--5bc1d813-693e-4823-9961-abf9af4b0e92",
+            "x-mitre-tactic--5e29b093-294e-49e9-a803-dab3d73b77dd",
+            "x-mitre-tactic--78b23412-0651-46d7-a540-170a1ce8bd5a",
+            "x-mitre-tactic--2558fd61-8c75-4730-94c4-11926db2a263",
+            "x-mitre-tactic--c17c5845-175e-4421-9713-829d0573dbc9",
+            "x-mitre-tactic--7141578b-e50b-4dcc-bfa4-08a8dd689e9e",
+            "x-mitre-tactic--d108ce10-2419-4cf9-a774-46161d6c6cfe",
+            "x-mitre-tactic--f72804c5-f15a-449e-a5da-2eecd181f813",
+            "x-mitre-tactic--9a4e74ab-5008-408c-84bf-a10dfbc53462",
+            "x-mitre-tactic--5569339b-94c2-49ee-afb3-2222936582c8"
+          ],
+          "type": "x-mitre-matrix"
+        },
+        :return:
+        """
+        matrix = {}
+        matrix['created'] = self.stix_creation_timestamp
+        matrix['created_by_ref'] = self.stix_created_by
+        matrix['description'] = 'Adversarial Misinformation and Influence Tactics and Techniques'
+        matrix['external_references'] = [
+            {
+                "external_id": "amitt-attack",
+                "source_name": "amitt-attack",
+                "url": "https://github.com/misinfosecproject/amitt_framework"
+            }
+        ]
+        matrix['id'] = f'x-mitre-matrix--{str(uuid.uuid4())}'
+        matrix['modified'] = self.stix_creation_timestamp
+        matrix['name'] = 'AMITT Misinformation Framework'
+        matrix['object_marking_refs'] = [
+            f'marking-definition--{self.stix_marking_definition}'
+          ],
+        matrix['tactic_refs'] = [
+            v for k, v in self.stix_tactic_uuid.items()
+        ]
+        matrix['type'] = 'x-mitre-matrix'
+
+        self.stix_bundle['objects'].append(matrix)
+
 
 
 
@@ -205,6 +300,7 @@ def main():
     amitt.make_stix_bundle()
     amitt.make_amitt_tactic()
     amitt.make_amitt_technique()
+    amitt.make_amitt_matrix()
 
     amitt.write_amitt_file('amitt-attack.json', amitt.stix_bundle)
 
