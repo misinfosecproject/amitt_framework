@@ -33,7 +33,7 @@
 <td><a href="techniques/T0001.md">T0001 5Ds (dismiss, distort, distract, dismay, divide)</a></td>
 <td><a href="techniques/T0005.md">T0005 Center of Gravity Analysis</a></td>
 <td><a href="techniques/T0007.md">T0007 Create fake Social Media Profiles / Pages / Groups</a></td>
-<td><a href="techniques/T0010.md">T0010 Cultivate useful idiots</a></td>
+<td><a href="techniques/T0010.md">T0010 Cultivate ignorant agents</a></td>
 <td><a href="techniques/T0016.md">T0016 Clickbait</a></td>
 <td><a href="techniques/T0019.md">T0019 Generate information pollution</a></td>
 <td><a href="techniques/T0029.md">T0029 Manipulate online polls</a></td>
