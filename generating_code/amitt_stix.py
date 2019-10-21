@@ -390,7 +390,7 @@ class Amitt:
         self.write_amitt_cti_dir(stix_object['type'])
 
         # Write the bundle to the amitt-attack directory.
-        self.write_amitt_file(f"amitt-attack/{stix_object['type']}/{stix_object['id']}", bundle)
+        self.write_amitt_file(f"amitt-attack/{stix_object['type']}/{stix_object['id']}.json", bundle)
 
 
 def main():
