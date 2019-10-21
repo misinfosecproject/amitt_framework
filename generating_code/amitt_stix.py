@@ -238,9 +238,8 @@ class Amitt:
             ]
             technique['type'] = 'attack-pattern'
             technique['x_mitre_platforms'] = [
-                                                 "Linux",
-                                                 "macOS",
-                                                 "Windows"
+                                                 "Cyber",
+                                                 "Physical"
                                              ],
             technique['x_mitre_version'] = '1.0'
 
