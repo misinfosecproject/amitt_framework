@@ -9,18 +9,65 @@ from datetime import datetime
 import pandas as pd
 import os
 import json
-import uuid
 import xlrd
+from datetime import datetime
+from dateutil import parser
+import numpy as np
+from stix2 import (Bundle, AttackPattern, Indicator, Relationship, Sighting, CustomObject, properties,
+                   Malware, Campaign, CourseOfAction, Identity, ObservedData, TimestampConstant, MarkingDefinition,
+                   StatementMarking, ExternalReference)
+from stix2.properties import (IntegerProperty, ListProperty, StringProperty, TimestampProperty)
 
+@CustomObject('x-mitre-tactic', [
+    ('name', properties.StringProperty(required=True)),
+    ('description', properties.StringProperty(required=True)),
+    ('x_mitre_shortname', properties.StringProperty(required=True))
+])
+class Tactic(object):
+    def __init__(self, x_mitre_shortname=None, **kwargs):
+        if x_mitre_shortname and x_mitre_shortname not in ["strategic-planning", "objective-planning", "develop-people",
+                                           "develop-networks", "microtargeting", "develop-content",
+                                           "channel-selection", "pump-priming", "exposure", "go-physical",
+                                           "persistence", "measure-effectiveness"]:
+            raise ValueError("'%s' is not a recognized AMITT Tactic." % x_mitre_shortname)
 
-class Amitt:
-    """
+@CustomObject('x-mitre-matrix', [
+    ('name', StringProperty(required=True)),
+    ('description', StringProperty(required=True)),
+    ('tactic_refs', ListProperty(StringProperty, required=True))
+])
+class Matrix(object):
+    def __init__(self, **kwargs):
+        if True:
+            pass
 
-    Create STIX bundles from the AMITT metadata xlsx.
+@CustomObject('x-amitt-influence', [
+    ('name', StringProperty(required=True)),
+    ('description', StringProperty(required=True)),
+    ('published', StringProperty()),
+    ('first_seen', TimestampProperty()),
+    ('last_seen', TimestampProperty()),
+    ('confidence', IntegerProperty()),
+    ('x_source', StringProperty()),
+    ('x_target', StringProperty()),
+    ('x_identified_via', StringProperty())
 
-    """
+])
+class Influence(object):
+    def __init__(self, **kwargs):
+        if True:
+            pass
 
+class AmittStix2:
     def __init__(self, infile='amitt_metadata_v3.xlsx'):
+        self.stix_objects = []
+        self.stix_tactic_uuid = {}
+        self.stix_technique_uuid = {}
+        self.stix_incident_uuid = {}
+        self.stix_campaign_uuid = {}
+        self.stix_relationship_uuid = {}
+        self.identity = None
+        self.marking_definition = None
 
         # Load metadata from file
         metadata = {}
@@ -33,6 +80,8 @@ class Amitt:
         self.techniques = metadata['techniques']
         self.tasks = metadata['tasks']
         self.incidents = metadata['incidents']
+        self.it = self.create_incident_technique_crosstable(metadata['incidenttechniques'])
+
 
         tactechs = self.techniques.groupby('tactic')['id'].apply(list).reset_index().rename({'id': 'techniques'},
                                                                                             axis=1)
@@ -43,157 +92,82 @@ class Amitt:
         self.tacdict = self.make_object_dict(self.tactics)
         self.techdict = self.make_object_dict(self.techniques)
 
-        self.stix_bundle = {}
-        self.stix_created_by = str(uuid.uuid4())
-        self.stix_marking_definition = str(uuid.uuid4())
-        self.stix_creation_timestamp = datetime.now().isoformat()
-        self.stix_tactic_uuid = {}
+        self.incidents = self.incidents.replace(np.nan, '', regex=True)
+        self.it = self.it.replace(np.nan, '', regex=True)
+
+    def create_incident_technique_crosstable(self, it_metadata):
+        # Generate full cross-table between incidents and techniques
+
+        it = it_metadata
+        it.index=it['id']
+        it = it['techniques'].str.split(',').apply(lambda x: pd.Series(x)).stack().reset_index(level=1, drop=True).to_frame('technique').reset_index().merge(it.drop('id', axis=1).reset_index()).drop('techniques', axis=1)
+        it = it.merge(self.incidents[['id','name']],
+                      left_on='incident', right_on='id',
+                      suffixes=['','_incident']).drop('incident', axis=1)
+        it = it.merge(self.techniques[['id','name']],
+                      left_on='technique', right_on='id',
+                      suffixes=['','_technique']).drop('technique', axis=1)
+        return(it)
 
     def make_object_dict(self, df):
         return pd.Series(df.name.values, index=df.id).to_dict()
 
-    def write_amitt_file(self, fname, file_data):
-        """
-        Write a sorted JSON object to disk.  Note file name args are unique each run.
-        :param fname: bundle['objects']['id']
-        :param file_data: bundle
-        :return:
-        """
-        with open(fname, 'w') as f:
-            json.dump(file_data, f, indent=2, sort_keys=True, ensure_ascii=False)
-            f.write('\n')
-
-    def write_amitt_cti_dir(self, dir):
-        """
-        Write a directory to disk. A directory name must be the same as the bundle type.
-        :param dir: bundle['objects']['type']
-        :return:
-        """
-        try:
-            os.mkdir('amitt-attack')
-        except FileExistsError:
-            pass
-
-        try:
-            os.mkdir('amitt-attack/' + dir)
-        except FileExistsError:
-            pass
-
-    def make_stix_bundle(self):
-        """
-        Create an empty STIX 2.0 bundle to populate with objects.
-        :return:
-        """
-        bundle = {
-            'type': 'bundle',
-            'id': f'bundle--{str(uuid.uuid4())}',
-            'spec_version': '2.0',
-            'objects': []
-        }
-
+    def stix_bundle(self):
+        bundle = Bundle(self.stix_objects)
         return bundle
+
+    def stix_marking_definition(self):
+        marking_definition = MarkingDefinition(
+            definition_type="statement",
+            created_by_ref=self.identity,
+            definition=StatementMarking(statement="CC-BY-4.0 Misinfosec Project")
+        )
+        return marking_definition
+
+    def stix_identity(self):
+        id = Identity(
+            name="Misinfosec Project",
+            identity_class="organization",
+            description="The Misinfosec group is where misinformation and information security people meet and learn from each other.",
+        )
+        return id
 
     def make_amitt_tactic(self):
         """
-        Build a tactic bundle as follows.
-        {
-            "created": "2018-10-17T00:14:20.652Z",
-            "created_by_ref": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
-            "description": "The adversary is ... ",
-            "external_references": [
-                {
-                    "external_id": "TA0008",
-                    "source_name": "mitre-attack",
-                    "url": "https://attack.mitre.org/tactics/TA0008"
-                }
-            ],
-            "id": "x-mitre-tactic--7141578b-e50b-4dcc-bfa4-08a8dd689e9e",
-            "modified": "2019-07-19T17:44:36.953Z",
-            "name": "Lateral Movement",
-            "object_marking_refs": [
-                "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
-            ],
-            "type": "x-mitre-tactic",
-            "x_mitre_shortname": "lateral-movement"
-        }
-        :return:
+
         """
         # Tactics format:
         # [['TA01', 'Strategic Planning', 'P01', 1, 'Defining the desired end state...', ...]]
         tactics = self.tactics.values.tolist()
 
         for tac in tactics:
-            tactic = {}
-            tactic['created'] = f'{self.stix_creation_timestamp}'
-            tactic['created_by_ref'] = f'identity--{self.stix_created_by}'
-            tactic['description'] = f'{tac[4]}'
-            tactic['external_references'] = [
+            description = f'{tac[4]}'
+            external_references = [
                 {
                     'external_id': f'{tac[0]}',
                     'source_name': 'mitre-attack',
                     'url': f'https://github.com/misinfosecproject/amitt_framework/blob/master/tactics/{tac[0]}.md'
                 }
             ]
-            tactic['id'] = f'x-mitre-tactic--{str(uuid.uuid4())}'
-            tactic['modified'] = f'{self.stix_creation_timestamp}'
-            tactic['name'] = f'{tac[1]}'
-            tactic['object_marking_refs'] = [
-                f'marking-definition--{self.stix_marking_definition}'
-            ]
-            tactic['type'] = 'x-mitre-tactic'
-            tactic['x_mitre_shortname'] = f'{tac[1]}'.replace(' ', '-').lower()
+            name = f'{tac[1]}'
+            x_mitre_shortname = f'{tac[1]}'.replace(' ', '-').lower()
 
-            self.stix_bundle['objects'].append(tactic)
-
-            self.make_cti_file(tactic)
+            tactic = Tactic(
+                name=name,
+                description=description,
+                x_mitre_shortname=x_mitre_shortname,
+                external_references=external_references,
+                object_marking_refs=self.marking_definition,
+                created_by_ref=self.identity
+                )
+            self.stix_objects.append(tactic)
 
             # Map the tactic external ID to the x-mitre-tactic uuid for use in x-mitre-matrix.
-            self.stix_tactic_uuid[tac[0]] = tactic['id']
+            self.stix_tactic_uuid[tac[0]] = tactic.id
 
     def make_amitt_technique(self):
         """
-        {
-            "created": "2017-05-31T21:30:22.096Z",
-            "created_by_ref": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
-            "description": "Some security tools ...",
-            "external_references": [
-                {
-                    "external_id": "T1009",
-                    "source_name": "mitre-attack",
-                    "url": "https://attack.mitre.org/techniques/T1009"
-                }
-            ],
-            "id": "attack-pattern--519630c5-f03f-4882-825c-3af924935817",
-            "kill_chain_phases": [
-                {
-                    "kill_chain_name": "mitre-attack",
-                    "phase_name": "defense-evasion"
-                }
-            ],
-            "modified": "2019-01-31T19:18:29.228Z",
-            "name": "Binary Padding",
-            "object_marking_refs": [
-                "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
-            ],
-            "type": "attack-pattern",
-            "x_mitre_data_sources": [
-                "Binary file metadata",
-                "File monitoring",
-                "Malware reverse engineering"
-            ],
-            "x_mitre_defense_bypassed": [
-                "Signature-based detection",
-                "Anti-virus"
-            ],
-            "x_mitre_detection": "Depending on the method used to pad ioe file.",
-            "x_mitre_platforms": [
-                "Linux",
-                "macOS",
-                "Windows"
-            ],
-            "x_mitre_version": "1.0"
-        }
-        :return:
+
         """
         # Techniques format:
         # ['T0001', '5Ds (dismiss, distort, distract, dismay, divide)', 'TA01', '4Ds of propaganda ...'], ...]
@@ -212,196 +186,246 @@ class Amitt:
             if tech[1] == tech[2] == tech[3] == '':
                 continue
 
-            technique = {}
-            technique['created'] = f'{self.stix_creation_timestamp}'
-            technique['created_by_ref'] = f'identity--{self.stix_created_by}'
-            technique['description'] = f'{tech[3]}'
-            technique['external_references'] = [
+            description = f'{tech[3]}'
+            external_references = [
                 {
                     'external_id': f'{tech[0]}',
                     'source_name': 'mitre-attack',
                     'url': f'https://github.com/misinfosecproject/amitt_framework/blob/master/techniques/{tech[0]}.md'
                 }
             ]
-            technique['id'] = f'attack-pattern--{str(uuid.uuid4())}'
-            technique['kill_chain_phases'] = [
+            kill_chain_phases = [
                 {
                     'phase_name': self.tacdict[tech[2]].replace(' ', '-').lower(),
                     'kill_chain_name': 'mitre-attack'
                 }
             ]
-            technique['modified'] = f'{self.stix_creation_timestamp}'
-            technique['name'] = f'{tech[1]}'
+            name = f'{tech[1]}'
+            x_mitre_platforms = [
+                                 "Cyber",
+                                 "Physical"
+                                ],
+            x_mitre_version = '1.0'
 
-            technique['object_marking_refs'] = [
-                f'marking-definition--{self.stix_marking_definition}'
-            ]
-            technique['type'] = 'attack-pattern'
-            technique['x_mitre_platforms'] = [
-                                                 "Cyber",
-                                                 "Physical"
-                                             ],
-            technique['x_mitre_version'] = '1.0'
+            technique = AttackPattern(
+                name=name,
+                description=description,
+                external_references=external_references,
+                object_marking_refs=self.marking_definition,
+                created_by_ref=self.identity,
+                kill_chain_phases=kill_chain_phases,
+                custom_properties={
+                    'x_mitre_platforms': x_mitre_platforms,
+                    'x_mitre_version': x_mitre_version
+                }
 
-            self.stix_bundle['objects'].append(technique)
+            )
 
-            self.make_cti_file(technique)
+            self.stix_objects.append(technique)
+
+            self.stix_technique_uuid[tech[0]] = technique.id
+
+    def make_amitt_influence_campaign(self):
+        reference = {
+                'external_id': '',
+                'source_name': '',
+                'url': ''
+            }
+
+        campaigns = self.incidents.itertuples()
+        for i in campaigns:
+            external_references = []
+            if i.type == "campaign":
+                reference_copy = reference
+
+                refs = i._8.split(" ")
+                print(refs)
+                for url in refs:
+
+                    reference_copy['url'] = url
+                    external_references.append(reference_copy)
+
+                campaign = Campaign(
+                    name=i.name,
+                    description=i.summary,
+                    first_seen=datetime.strptime(str(int(i._5)), "%Y"),
+                    external_references=external_references,
+                    custom_properties={
+                        "published": i._10,
+                        "x_source": i._6,
+                        "x_target": i._7,
+                        "x_identified_via": i._11
+                    }
+                )
+                self.stix_objects.append(campaign)
+                self.stix_campaign_uuid[i.id] = campaign.id
+
+    def make_amitt_influence_incidents(self):
+        """
+        Pandas(Index=19, id='I00020', name='3000 tanks', type='incident',
+        summary=nan, _5="Year Started", _6='From country', _7='To country',
+        _8='URL(s)',
+        Notes=nan, _10='When added', _11='Found via')
+        :return:
+        """
+        reference = {
+            'external_id': '',
+            'source_name': '',
+            'url': ''
+        }
+
+        incidents = self.incidents.itertuples()
+        for i in incidents:
+            external_references = []
+            if i.type == "incident":
+                reference_copy = reference
+
+                refs = i._8.split(" ")
+                print(refs)
+                for url in refs:
+                    reference_copy['url'] = url
+                    external_references.append(reference_copy)
+
+                incident = Influence(
+                    name=i.name,
+                    description=i.summary,
+                    published=i._10,
+                    first_seen=datetime.strptime(str(int(i._5)), "%Y"),
+                    # last_seen=,
+                    # confidence=,
+                    x_source=i._6,
+                    x_target=i._7,
+                    x_identified_via=i._11,
+                    external_references=external_references
+                 )
+                self.stix_objects.append(incident)
+                self.stix_incident_uuid[i.id] = incident.id
+
+    def make_incident_relationships(self):
+        for i in self.it.itertuples():
+            # print(i)
+            if i.id_incident in self.stix_incident_uuid:
+                # print(self.stix_incident_uuid)
+                source = self.stix_incident_uuid[i.id_incident]
+                # print(source)
+                target = self.stix_technique_uuid[i.id_technique]
+                relation = "uses"
+
+                relationship = Relationship(
+                    source_ref=source,
+                    target_ref=target,
+                    relationship_type=relation
+                )
+                self.stix_objects.append(relationship)
+                self.stix_relationship_uuid[i.id] = relationship.id
+
+    def make_campaign_relationships(self):
+        for i in self.it.itertuples():
+            # print(i)
+            if i.id_incident in self.stix_campaign_uuid:
+                # print(self.stix_incident_uuid)
+                source = self.stix_campaign_uuid[i.id_incident]
+                # print(source)
+                target = self.stix_technique_uuid[i.id_technique]
+                relation = "uses"
+
+                relationship = Relationship(
+                    source_ref=source,
+                    target_ref=target,
+                    relationship_type=relation
+                )
+                self.stix_objects.append(relationship)
+                self.stix_relationship_uuid[i.id] = relationship.id
+
 
     def make_amitt_matrix(self):
         """
-        {
-          "created": "2018-10-17T00:14:20.652Z",
-          "created_by_ref": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
-          "description": "The full ATT&CK Matrix includes techniques spanning Windows, Mac, and ...",
-          "external_references": [
-            {
-              "external_id": "enterprise-attack",
-              "source_name": "mitre-attack",
-              "url": "https://attack.mitre.org/matrices/enterprise"
-            }
-          ],
-          "id": "x-mitre-matrix--eafc1b4c-5e56-4965-bd4e-66a6a89c88cc",
-          "modified": "2019-04-16T21:39:18.247Z",
-          "name": "Enterprise ATT&CK",
-          "object_marking_refs": [
-            "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
-          ],
-          "tactic_refs": [
-            "x-mitre-tactic--ffd5bcee-6e16-4dd2-8eca-7b3beedf33ca",
-            "x-mitre-tactic--4ca45d45-df4d-4613-8980-bac22d278fa5",
-            "x-mitre-tactic--5bc1d813-693e-4823-9961-abf9af4b0e92",
-            "x-mitre-tactic--5e29b093-294e-49e9-a803-dab3d73b77dd",
-            "x-mitre-tactic--78b23412-0651-46d7-a540-170a1ce8bd5a",
-            "x-mitre-tactic--2558fd61-8c75-4730-94c4-11926db2a263",
-            "x-mitre-tactic--c17c5845-175e-4421-9713-829d0573dbc9",
-            "x-mitre-tactic--7141578b-e50b-4dcc-bfa4-08a8dd689e9e",
-            "x-mitre-tactic--d108ce10-2419-4cf9-a774-46161d6c6cfe",
-            "x-mitre-tactic--f72804c5-f15a-449e-a5da-2eecd181f813",
-            "x-mitre-tactic--9a4e74ab-5008-408c-84bf-a10dfbc53462",
-            "x-mitre-tactic--5569339b-94c2-49ee-afb3-2222936582c8"
-          ],
-          "type": "x-mitre-matrix"
-        },
-        :return:
+
         """
-        matrix = {}
-        matrix['created'] = self.stix_creation_timestamp
-        matrix['created_by_ref'] = self.stix_created_by
-        matrix['description'] = 'Adversarial Misinformation and Influence Tactics and Techniques'
-        matrix['external_references'] = [
+        description = 'Adversarial Misinformation and Influence Tactics and Techniques'
+        external_references = [
             {
                 "external_id": "amitt-attack",
                 "source_name": "amitt-attack",
                 "url": "https://github.com/misinfosecproject/amitt_framework"
             }
         ]
-        matrix['id'] = f'x-mitre-matrix--{str(uuid.uuid4())}'
-        matrix['modified'] = self.stix_creation_timestamp
-        matrix['name'] = 'AMITT Misinformation Framework'
-        matrix['object_marking_refs'] = [
-            f'marking-definition--{self.stix_marking_definition}'
-        ]
-        matrix['tactic_refs'] = [
+        name = 'AMITT Misinformation Framework'
+        tactic_refs = [
             v for k, v in self.stix_tactic_uuid.items()
         ]
-        matrix['type'] = 'x-mitre-matrix'
 
-        self.stix_bundle['objects'].append(matrix)
+        matrix = Matrix(
+            name=name,
+            description=description,
+            external_references=external_references,
+            tactic_refs=tactic_refs
+        )
+        self.stix_objects.append(matrix)
 
-        self.make_cti_file(matrix)
-
-    def make_amitt_identity(self):
+    def write_amitt_file(self, fname, file_data):
         """
-        {
-            "type": "bundle",
-            "id": "bundle--726d4989-0335-4e74-b661-63027e6cd637",
-            "spec_version": "2.0",
-            "objects": [
-                {
-                    "modified": "2017-06-01T00:00:00.000Z",
-                    "type": "identity",
-                    "identity_class": "organization",
-                    "object_marking_refs": [
-                        "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
-                    ],
-                    "name": "The MITRE Corporation",
-                    "id": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
-                    "created": "2017-06-01T00:00:00.000Z"
-                }
-            ]
-        }
+        Write a sorted JSON object to disk.  Note file name args are unique each run.
+        :param fname: bundle['objects']['id']
+        :param file_data: bundle
         :return:
         """
-        identity = {}
-        identity['created'] = self.stix_creation_timestamp
-        identity['id'] = f'identity--{str(uuid.uuid4())}'
-        identity['identity_class'] = 'organization'
-        identity['modified'] = self.stix_creation_timestamp
-        identity['name'] = 'misinfosec project'
-        identity['object_marking_refs'] = [f'marking-definition--{self.stix_marking_definition}']
-        identity['type'] = 'identity'
+        with open(fname, 'w') as f:
+            # json.dump(file_data, f, indent=2, sort_keys=True, ensure_ascii=False)
+            f.write(file_data.serialize(pretty=True))
+            f.write('\n')
 
-        self.stix_bundle['objects'].append(identity)
-
-        self.make_cti_file(identity)
-
-    def make_amitt_marking_definition(self):
+    def write_amitt_cti_dir(self, dir):
         """
-        {
-            "type": "bundle",
-            "id": "bundle--71bbd1e8-7423-4a2d-8e95-fd73c229a96d",
-            "spec_version": "2.0",
-            "objects": [
-                {
-                    "created_by_ref": "identity--c78cb6e5-0c4b-4611-8297-d1b8b55e40b5",
-                    "type": "marking-definition",
-                    "definition": {
-                        "statement": "Copyright 2017, The MITRE Corporation"
-                    },
-                    "definition_type": "statement",
-                    "created": "2017-06-01T00:00:00Z",
-                    "id": "marking-definition--fa42a846-8d90-4e51-bc29-71d5b4802168"
-                }
-            ]
-        }
+        Write a directory to disk. A directory name must be the same as the bundle type.
+        :param dir: bundle['objects']['type']
         :return:
         """
-        marking = {}
-        marking['created'] = self.stix_creation_timestamp
-        marking['created_by_ref'] = self.stix_created_by
-        marking['definition'] = {'statement': 'CC-BY-4.0 misinfosec project'}
-        marking['definition_type'] = 'statement'
-        marking['id'] = f'marking-definition--{str(uuid.uuid4())}'
-        marking['type'] = 'marking-definition'
+        try:
+            os.mkdir('amitt-attack')
+        except FileExistsError:
+            pass
 
-        self.stix_bundle['objects'].append(marking)
+        try:
+            os.mkdir('amitt-attack/' + dir)
+        except FileExistsError:
+            pass
 
-        self.make_cti_file(marking)
+    def make_cti_file(self, stix_objects, bundle_name):
+        for object in stix_objects:
+            self.write_amitt_cti_dir(object.type)
+            # Write the bundle to the amitt-attack directory.
+            self.write_amitt_file(f"amitt-attack/{object.type}/{object.id}.json", Bundle(object))
 
-    def make_cti_file(self, stix_object):
-        # Create the STIX tactic bundle.
-        bundle = self.make_stix_bundle()
-
-        # Add the tactic object to the bundle.
-        bundle['objects'].append(stix_object)
-
-        # Write the amitt-attack property directory.
-        self.write_amitt_cti_dir(stix_object['type'])
-
-        # Write the bundle to the amitt-attack directory.
-        self.write_amitt_file(f"amitt-attack/{stix_object['type']}/{stix_object['id']}.json", bundle)
+        self.write_amitt_file(f"amitt-attack/{bundle_name}.json", self.stix_bundle())
 
 
 def main():
-    amitt = Amitt()
-    amitt.stix_bundle = amitt.make_stix_bundle()
-    amitt.make_amitt_tactic()
-    amitt.make_amitt_technique()
-    amitt.make_amitt_identity()
-    amitt.make_amitt_marking_definition()
-    amitt.make_amitt_matrix()
+    stix_maker = AmittStix2()
+    stix_maker.identity = stix_maker.stix_identity()
+    stix_maker.marking_definition = stix_maker.stix_marking_definition()
 
-    amitt.write_amitt_file('amitt-attack/amitt-attack.json', amitt.stix_bundle)
+    stix_maker.make_amitt_tactic()
+
+    stix_maker.make_amitt_technique()
+
+    stix_maker.make_amitt_matrix()
+
+    stix_maker.make_amitt_influence_incidents()
+
+    stix_maker.make_amitt_influence_campaign()
+
+    stix_maker.make_incident_relationships()
+
+    stix_maker.make_campaign_relationships()
+
+    print(stix_maker.stix_bundle())
+
+    stix_maker.make_cti_file(stix_maker.stix_objects, bundle_name='amitt_attack')
+
+
+
+
 
 
 if __name__ == '__main__':
