@@ -13,7 +13,7 @@ import xlrd
 from datetime import datetime
 from dateutil import parser
 import numpy as np
-from stix2 import (Bundle, AttackPattern, Indicator, Relationship, Sighting, CustomObject, properties,
+from stix2 import (Bundle, AttackPattern, Indicator, IntrusionSet, Relationship, Sighting, CustomObject, properties,
                    Malware, Campaign, CourseOfAction, Identity, ObservedData, TimestampConstant, MarkingDefinition,
                    StatementMarking, ExternalReference)
 from stix2.properties import (IntegerProperty, ListProperty, StringProperty, TimestampProperty)
@@ -41,22 +41,22 @@ class Matrix(object):
         if True:
             pass
 
-@CustomObject('x-amitt-influence', [
-    ('name', StringProperty(required=True)),
-    ('description', StringProperty(required=True)),
-    ('published', StringProperty()),
-    ('first_seen', TimestampProperty()),
-    ('last_seen', TimestampProperty()),
-    ('confidence', IntegerProperty()),
-    ('x_source', StringProperty()),
-    ('x_target', StringProperty()),
-    ('x_identified_via', StringProperty())
-
-])
-class Influence(object):
-    def __init__(self, **kwargs):
-        if True:
-            pass
+# @CustomObject('x-amitt-influence', [
+#     ('name', StringProperty(required=True)),
+#     ('description', StringProperty(required=True)),
+#     ('published', StringProperty()),
+#     ('first_seen', TimestampProperty()),
+#     ('last_seen', TimestampProperty()),
+#     ('confidence', IntegerProperty()),
+#     ('x_source', StringProperty()),
+#     ('x_target', StringProperty()),
+#     ('x_identified_via', StringProperty())
+# 
+# ])
+# class Influence(object):
+#     def __init__(self, **kwargs):
+#         if True:
+#             pass
 
 class AmittStix2:
     def __init__(self, infile='amitt_metadata_v3.xlsx'):
@@ -225,15 +225,15 @@ class AmittStix2:
 
             self.stix_technique_uuid[tech[0]] = technique.id
 
-    def make_amitt_influence_campaign(self):
+    def make_amitt_intrusion_set(self):
         reference = {
                 'external_id': '',
                 'source_name': '',
                 'url': ''
             }
 
-        campaigns = self.incidents.itertuples()
-        for i in campaigns:
+        intrusion_sets = self.incidents.itertuples()
+        for i in intrusion_set:
             external_references = []
             if i.type == "campaign":
                 reference_copy = reference
@@ -245,13 +245,13 @@ class AmittStix2:
                     reference_copy['url'] = url
                     external_references.append(reference_copy)
 
-                campaign = Campaign(
+                campaign = IntrusionSet(
                     name=i.name,
                     description=i.summary,
                     first_seen=datetime.strptime(str(int(i._5)), "%Y"),
                     external_references=external_references,
                     custom_properties={
-                        "published": i._10,
+                        "x_published": i._10,
                         "x_source": i._6,
                         "x_target": i._7,
                         "x_identified_via": i._11
@@ -260,7 +260,7 @@ class AmittStix2:
                 self.stix_objects.append(campaign)
                 self.stix_campaign_uuid[i.id] = campaign.id
 
-    def make_amitt_influence_incidents(self):
+    def make_amitt_influence_campaigns(self):
         """
         Pandas(Index=19, id='I00020', name='3000 tanks', type='incident',
         summary=nan, _5="Year Started", _6='From country', _7='To country',
@@ -286,20 +286,26 @@ class AmittStix2:
                     reference_copy['url'] = url
                     external_references.append(reference_copy)
 
-                incident = Influence(
+                campaign = Campaign(
                     name=i.name,
                     description=i.summary,
-                    published=i._10,
+                    # published=i._10,
                     first_seen=datetime.strptime(str(int(i._5)), "%Y"),
                     # last_seen=,
                     # confidence=,
-                    x_source=i._6,
-                    x_target=i._7,
-                    x_identified_via=i._11,
+                    # x_source=i._6,
+                    # x_target=i._7,
+                    # x_identified_via=i._11,
+                    custom_properties={
+                        "x_published": i._10,
+                        "x_source": i._6,
+                        "x_target": i._7,
+                        "x_identified_via": i._11
+                    },
                     external_references=external_references
                  )
-                self.stix_objects.append(incident)
-                self.stix_incident_uuid[i.id] = incident.id
+                self.stix_objects.append(campaign)
+                self.stix_campaign_uuid[i.id] = campaign.id
 
     def make_incident_relationships(self):
         for i in self.it.itertuples():
@@ -413,7 +419,7 @@ def main():
 
     stix_maker.make_amitt_influence_incidents()
 
-    stix_maker.make_amitt_influence_campaign()
+    stix_maker.make_amitt_intrusion_set()
 
     stix_maker.make_incident_relationships()
 
