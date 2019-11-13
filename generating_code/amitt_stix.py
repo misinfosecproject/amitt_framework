@@ -15,8 +15,9 @@ from datetime import datetime
 from dateutil import parser
 import numpy as np
 from stix2 import (Bundle, AttackPattern, ThreatActor, IntrusionSet, Relationship, CustomObject, properties,
-                   Malware, Tool, Campaign, Identity, MarkingDefinition, ExternalReference, StatementMarking)
-from stix2.properties import (IntegerProperty, ListProperty, StringProperty, TimestampProperty)
+                   Malware, Tool, Campaign, Identity, MarkingDefinition, ExternalReference, StatementMarking,
+                   GranularMarking)
+from stix2.properties import (ReferenceProperty, ListProperty, StringProperty, TimestampProperty)
 
 @CustomObject('x-mitre-tactic', [
     ('name', properties.StringProperty(required=True)),
@@ -31,12 +32,28 @@ class Tactic(object):
                                            "persistence", "measure-effectiveness"]:
             raise ValueError("'%s' is not a recognized AMITT Tactic." % x_mitre_shortname)
 
-@CustomObject('x-mitre-narrative', [
+@CustomObject('x-amitt-narrative', [
     ('name', StringProperty(required=True)),
     ('description', StringProperty(required=True)),
     ('first_seen', TimestampProperty()),
     ('last_seen', TimestampProperty()),
     ('x_amitt_presumed_goals', StringProperty())
+])
+class Narrative(object):
+    def __init__(self, **kwargs):
+        if True:
+            pass
+
+@CustomObject('x-amitt-incident', [
+    ('name', StringProperty(required=True)),
+    ('description', StringProperty()),
+    ('aliases', ListProperty(StringProperty)),
+    ('first_seen', TimestampProperty()),
+    ('last_seen', TimestampProperty()),
+    ('objective', StringProperty()),
+    ('external_references', ListProperty(ExternalReference)),
+    ('object_marking_refs', ListProperty(ReferenceProperty(valid_types='marking-definition', spec_version='2.0'))),
+    ('granular_markings', ListProperty(GranularMarking))
 ])
 class Narrative(object):
     def __init__(self, **kwargs):
@@ -380,8 +397,8 @@ class AmittStix:
                     contact_information=i.contactInformation,
                     custom_properties={
                         "x_published": i.whenAdded,
-                        "x_source": i.sourceCountry,
-                        "x_target": i.targetCountry,
+                        # "x_source": i.sourceCountry,
+                        # "x_target": i.targetCountry,
                         "x_identified_via": i.foundVia
                     },
                     external_references=external_references
