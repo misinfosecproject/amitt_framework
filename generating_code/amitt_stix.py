@@ -8,14 +8,14 @@
 from datetime import datetime
 import pandas as pd
 import os
+import re
 import json
 import xlrd
 from datetime import datetime
 from dateutil import parser
 import numpy as np
-from stix2 import (Bundle, AttackPattern, Indicator, IntrusionSet, Relationship, Sighting, CustomObject, properties,
-                   Malware, Campaign, CourseOfAction, Identity, ObservedData, TimestampConstant, MarkingDefinition,
-                   StatementMarking, ExternalReference)
+from stix2 import (Bundle, AttackPattern, ThreatActor, IntrusionSet, Relationship, CustomObject, properties,
+                   Malware, Tool, Campaign, Identity, MarkingDefinition, ExternalReference, StatementMarking)
 from stix2.properties import (IntegerProperty, ListProperty, StringProperty, TimestampProperty)
 
 @CustomObject('x-mitre-tactic', [
@@ -31,6 +31,18 @@ class Tactic(object):
                                            "persistence", "measure-effectiveness"]:
             raise ValueError("'%s' is not a recognized AMITT Tactic." % x_mitre_shortname)
 
+@CustomObject('x-mitre-narrative', [
+    ('name', StringProperty(required=True)),
+    ('description', StringProperty(required=True)),
+    ('first_seen', TimestampProperty()),
+    ('last_seen', TimestampProperty()),
+    ('x_amitt_presumed_goals', StringProperty())
+])
+class Narrative(object):
+    def __init__(self, **kwargs):
+        if True:
+            pass
+
 @CustomObject('x-mitre-matrix', [
     ('name', StringProperty(required=True)),
     ('description', StringProperty(required=True)),
@@ -41,30 +53,16 @@ class Matrix(object):
         if True:
             pass
 
-# @CustomObject('x-amitt-influence', [
-#     ('name', StringProperty(required=True)),
-#     ('description', StringProperty(required=True)),
-#     ('published', StringProperty()),
-#     ('first_seen', TimestampProperty()),
-#     ('last_seen', TimestampProperty()),
-#     ('confidence', IntegerProperty()),
-#     ('x_source', StringProperty()),
-#     ('x_target', StringProperty()),
-#     ('x_identified_via', StringProperty())
-# 
-# ])
-# class Influence(object):
-#     def __init__(self, **kwargs):
-#         if True:
-#             pass
 
-class AmittStix2:
+class AmittStix:
     def __init__(self, infile='amitt_metadata_v3.xlsx'):
         self.stix_objects = []
         self.stix_tactic_uuid = {}
         self.stix_technique_uuid = {}
-        self.stix_incident_uuid = {}
+        self.stix_intrusion_set_uuid = {}
         self.stix_campaign_uuid = {}
+        self.stix_threat_actor_uuid = {}
+        self.stix_identity_uuid = {}
         self.stix_relationship_uuid = {}
         self.identity = None
         self.marking_definition = None
@@ -76,38 +74,37 @@ class AmittStix2:
             metadata[sheetname] = xlsx.parse(sheetname)
 
         # Create individual tables and dictionaries
+        self.actors = metadata['actors']
+        self.campaigns = metadata['campaigns']
+        self.intrusionsets = metadata['intrusionsets']
+        self.identities = metadata['identities']
         self.phases = metadata['phases']
-        self.techniques = metadata['techniques']
         self.tasks = metadata['tasks']
-        self.incidents = metadata['incidents']
-        self.it = self.create_incident_technique_crosstable(metadata['incidenttechniques'])
+        self.techniques = metadata['techniques']
+        self.relationships = metadata['relationships']
+        self.it = self.expand_relationship_targets(metadata['relationships'])
 
-
-        tactechs = self.techniques.groupby('tactic')['id'].apply(list).reset_index().rename({'id': 'techniques'},
-                                                                                            axis=1)
-        self.tactics = metadata['tactics'].merge(tactechs, left_on='id', right_on='tactic', how='left').fillna('').drop(
-            'tactic', axis=1)
-
-        self.phasedict = self.make_object_dict(self.phases)
+        tactechs = self.techniques.groupby('tactic')['id'].apply(list).reset_index()\
+            .rename({'id': 'techniques'}, axis=1)
+        self.tactics = metadata['tactics'].merge(tactechs, left_on='id', right_on='tactic',
+                                                 how='left').fillna('').drop('tactic', axis=1)
         self.tacdict = self.make_object_dict(self.tactics)
-        self.techdict = self.make_object_dict(self.techniques)
 
-        self.incidents = self.incidents.replace(np.nan, '', regex=True)
+        self.actors = self.actors.replace(np.nan, '', regex=True)
+        self.campaigns = self.campaigns.replace(np.nan, '', regex=True)
+        self.intrusionsets = self.intrusionsets.replace(np.nan, '', regex=True)
+        self.identities = self.identities.replace(np.nan, '', regex=True)
+        self.relationships = self.relationships.replace(np.nan, '', regex=True)
         self.it = self.it.replace(np.nan, '', regex=True)
 
-    def create_incident_technique_crosstable(self, it_metadata):
-        # Generate full cross-table between incidents and techniques
-
+    def expand_relationship_targets(self, it_metadata):
         it = it_metadata
-        it.index=it['id']
-        it = it['techniques'].str.split(',').apply(lambda x: pd.Series(x)).stack().reset_index(level=1, drop=True).to_frame('technique').reset_index().merge(it.drop('id', axis=1).reset_index()).drop('techniques', axis=1)
-        it = it.merge(self.incidents[['id','name']],
-                      left_on='incident', right_on='id',
-                      suffixes=['','_incident']).drop('incident', axis=1)
-        it = it.merge(self.techniques[['id','name']],
-                      left_on='technique', right_on='id',
-                      suffixes=['','_technique']).drop('technique', axis=1)
-        return(it)
+        it.index = it['id']
+        it = it['targets'].str.split(',').apply(lambda x: pd.Series(x)).stack().reset_index(level=1,
+                                                                                               drop=True).to_frame(
+            'target').reset_index().merge(it.drop('id', axis=1).reset_index()).drop('targets', axis=1)
+
+        return it
 
     def make_object_dict(self, df):
         return pd.Series(df.name.values, index=df.id).to_dict()
@@ -132,7 +129,24 @@ class AmittStix2:
         )
         return id
 
-    def make_amitt_tactic(self):
+    def parse_xlsx_reference_tuples(self, t):
+        refs = []
+        ref_tuples = re.findall("([^()]+)", t)
+
+        for i in ref_tuples:
+            s = i.split(",")
+            ref_list = []
+            for n in s:
+                ref_list.append(n.strip(" "))
+
+            if ref_list == [""]:
+                continue
+            else:
+                refs.append(ref_list)
+
+        return refs
+
+    def amitt_tactic(self):
         """
 
         """
@@ -165,7 +179,7 @@ class AmittStix2:
             # Map the tactic external ID to the x-mitre-tactic uuid for use in x-mitre-matrix.
             self.stix_tactic_uuid[tac[0]] = tactic.id
 
-    def make_amitt_technique(self):
+    def amitt_technique(self):
         """
 
         """
@@ -225,120 +239,172 @@ class AmittStix2:
 
             self.stix_technique_uuid[tech[0]] = technique.id
 
-    def make_amitt_intrusion_set(self):
-        reference = {
-                'external_id': '',
-                'source_name': '',
-                'url': ''
-            }
+    def amitt_intrusion_set(self):
+        """
 
-        intrusion_sets = self.incidents.itertuples()
-        for i in intrusion_set:
+        """
+        intrusion_sets = self.intrusionsets.itertuples()
+        for i in intrusion_sets:
+            if i.id == "I00000":
+                continue
             external_references = []
-            if i.type == "campaign":
-                reference_copy = reference
+            if i.type == "intrusion-set":
+                refs = self.parse_xlsx_reference_tuples(i.references)
+                for ref in refs:
+                    try:
+                        reference = ExternalReference(
+                            source_name=ref[1],
+                            url=ref[2],
+                            external_id=ref[0]
+                        )
+                        external_references.append(reference)
+                    except IndexError:
+                        pass
 
-                refs = i._8.split(" ")
-                print(refs)
-                for url in refs:
-
-                    reference_copy['url'] = url
-                    external_references.append(reference_copy)
-
-                campaign = IntrusionSet(
+                intrusion_set = IntrusionSet(
                     name=i.name,
                     description=i.summary,
-                    first_seen=datetime.strptime(str(int(i._5)), "%Y"),
-                    external_references=external_references,
+                    first_seen=datetime.strptime(str(int(i.firstSeen)), "%Y"),
                     custom_properties={
-                        "x_published": i._10,
-                        "x_source": i._6,
-                        "x_target": i._7,
-                        "x_identified_via": i._11
-                    }
+                        "x_published": i.whenAdded,
+                        "x_source": i.sourceCountry,
+                        "x_target": i.targetCountry,
+                        "x_identified_via": i.foundVia
+                    },
+                    external_references=external_references
                 )
-                self.stix_objects.append(campaign)
-                self.stix_campaign_uuid[i.id] = campaign.id
+                self.stix_objects.append(intrusion_set)
+                self.stix_intrusion_set_uuid[i.id] = intrusion_set.id
 
-    def make_amitt_influence_campaigns(self):
+    def amitt_campaign(self):
         """
-        Pandas(Index=19, id='I00020', name='3000 tanks', type='incident',
-        summary=nan, _5="Year Started", _6='From country', _7='To country',
-        _8='URL(s)',
-        Notes=nan, _10='When added', _11='Found via')
-        :return:
-        """
-        reference = {
-            'external_id': '',
-            'source_name': '',
-            'url': ''
-        }
 
-        incidents = self.incidents.itertuples()
-        for i in incidents:
+        """
+        campaigns = self.campaigns.itertuples()
+        for i in campaigns:
+            if i.id == "I00000":
+                continue
             external_references = []
-            if i.type == "incident":
-                reference_copy = reference
-
-                refs = i._8.split(" ")
-                print(refs)
-                for url in refs:
-                    reference_copy['url'] = url
-                    external_references.append(reference_copy)
+            if i.type == "campaign":
+                refs = self.parse_xlsx_reference_tuples(i.references)
+                for ref in refs:
+                    try:
+                        reference = ExternalReference(
+                            source_name=ref[1],
+                            url=ref[2],
+                            external_id=ref[0]
+                        )
+                        external_references.append(reference)
+                    except IndexError:
+                        pass
 
                 campaign = Campaign(
                     name=i.name,
                     description=i.summary,
-                    # published=i._10,
-                    first_seen=datetime.strptime(str(int(i._5)), "%Y"),
-                    # last_seen=,
-                    # confidence=,
-                    # x_source=i._6,
-                    # x_target=i._7,
-                    # x_identified_via=i._11,
+                    first_seen=datetime.strptime(str(int(i.firstSeen)), "%Y"),
                     custom_properties={
-                        "x_published": i._10,
-                        "x_source": i._6,
-                        "x_target": i._7,
-                        "x_identified_via": i._11
+                        "x_published": i.whenAdded,
+                        "x_source": i.sourceCountry,
+                        "x_target": i.targetCountry,
+                        "x_identified_via": i.foundVia
                     },
                     external_references=external_references
                  )
                 self.stix_objects.append(campaign)
                 self.stix_campaign_uuid[i.id] = campaign.id
 
-    def make_incident_relationships(self):
+    def amitt_actor(self):
+        """
+
+        """
+        threat_actors = self.actors.itertuples()
+        for i in threat_actors:
+            if i.id == "I00000":
+                continue
+            external_references = []
+            if i.type == "threat-actor":
+                refs = self.parse_xlsx_reference_tuples(i.references)
+                for ref in refs:
+                    try:
+                        reference = ExternalReference(
+                            source_name=ref[1],
+                            url=ref[2],
+                            external_id=ref[0]
+                        )
+                        external_references.append(reference)
+                    except IndexError:
+                        pass
+
+                threat_actor = ThreatActor(
+                    name=i.name,
+                    description=i.summary,
+                    first_seen=datetime.strptime(str(int(i.firstSeen)), "%Y"),
+                    custom_properties={
+                        "x_published": i.whenAdded,
+                        "x_source": i.sourceCountry,
+                        "x_target": i.targetCountry,
+                        "x_identified_via": i.foundVia
+                    },
+                    external_references=external_references
+                 )
+                self.stix_objects.append(threat_actor)
+                self.stix_threat_actor_uuid[i.id] = threat_actor.id
+
+    def amitt_identity(self):
+        """
+
+        """
+        threat_actors = self.identities.itertuples()
+        for i in threat_actors:
+            if i.id == "ID00000":
+                continue
+            external_references = []
+            if i.type == "identity":
+                refs = self.parse_xlsx_reference_tuples(i.references)
+                for ref in refs:
+                    try:
+                        reference = ExternalReference(
+                            source_name=ref[1],
+                            url=ref[2],
+                            external_id=ref[0]
+                        )
+                        external_references.append(reference)
+                    except IndexError:
+                        pass
+
+                identity = Identity(
+                    name=i.name,
+                    description=i.summary,
+                    identity_class=i.identityClass,
+                    sectors=i.sectors,
+                    contact_information=i.contactInformation,
+                    custom_properties={
+                        "x_published": i.whenAdded,
+                        "x_source": i.sourceCountry,
+                        "x_target": i.targetCountry,
+                        "x_identified_via": i.foundVia
+                    },
+                    external_references=external_references
+                 )
+                self.stix_objects.append(identity)
+                self.stix_identity_uuid[i.id] = identity.id
+
+    def amitt_relationship(self):
+        """
+
+        """
+        # Merge all UUID dictionaries.
+        stix_objects = {**self.stix_campaign_uuid, **self.stix_intrusion_set_uuid, **self.stix_tactic_uuid,
+                        **self.stix_identity_uuid, **self.stix_technique_uuid, **self.stix_threat_actor_uuid}
         for i in self.it.itertuples():
-            # print(i)
-            if i.id_incident in self.stix_incident_uuid:
-                # print(self.stix_incident_uuid)
-                source = self.stix_incident_uuid[i.id_incident]
-                # print(source)
-                target = self.stix_technique_uuid[i.id_technique]
-                relation = "uses"
+            if i.id == "I00000T000":
+                continue
 
+            if i.source in stix_objects and i.target in stix_objects:
                 relationship = Relationship(
-                    source_ref=source,
-                    target_ref=target,
-                    relationship_type=relation
-                )
-                self.stix_objects.append(relationship)
-                self.stix_relationship_uuid[i.id] = relationship.id
-
-    def make_campaign_relationships(self):
-        for i in self.it.itertuples():
-            # print(i)
-            if i.id_incident in self.stix_campaign_uuid:
-                # print(self.stix_incident_uuid)
-                source = self.stix_campaign_uuid[i.id_incident]
-                # print(source)
-                target = self.stix_technique_uuid[i.id_technique]
-                relation = "uses"
-
-                relationship = Relationship(
-                    source_ref=source,
-                    target_ref=target,
-                    relationship_type=relation
+                    source_ref=stix_objects[i.source],
+                    target_ref=stix_objects[i.target],
+                    relationship_type=i.relationship
                 )
                 self.stix_objects.append(relationship)
                 self.stix_relationship_uuid[i.id] = relationship.id
@@ -377,7 +443,6 @@ class AmittStix2:
         :return:
         """
         with open(fname, 'w') as f:
-            # json.dump(file_data, f, indent=2, sort_keys=True, ensure_ascii=False)
             f.write(file_data.serialize(pretty=True))
             f.write('\n')
 
@@ -407,25 +472,27 @@ class AmittStix2:
 
 
 def main():
-    stix_maker = AmittStix2()
+    stix_maker = AmittStix()
     stix_maker.identity = stix_maker.stix_identity()
     stix_maker.marking_definition = stix_maker.stix_marking_definition()
 
-    stix_maker.make_amitt_tactic()
+    stix_maker.amitt_tactic()
 
-    stix_maker.make_amitt_technique()
+    stix_maker.amitt_technique()
 
     stix_maker.make_amitt_matrix()
 
-    stix_maker.make_amitt_influence_incidents()
+    stix_maker.amitt_campaign()
 
-    stix_maker.make_amitt_intrusion_set()
+    stix_maker.amitt_intrusion_set()
 
-    stix_maker.make_incident_relationships()
+    stix_maker.amitt_intrusion_set()
 
-    stix_maker.make_campaign_relationships()
+    stix_maker.amitt_identity()
 
-    print(stix_maker.stix_bundle())
+    stix_maker.amitt_relationship()
+
+    # print(stix_maker.stix_bundle())
 
     stix_maker.make_cti_file(stix_maker.stix_objects, bundle_name='amitt_attack')
 
