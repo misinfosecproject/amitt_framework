@@ -34,10 +34,14 @@ class Tactic(object):
 
 @CustomObject('x-amitt-narrative', [
     ('name', StringProperty(required=True)),
-    ('description', StringProperty(required=True)),
+    ('description', StringProperty()),
+    ('aliases', ListProperty(StringProperty)),
     ('first_seen', TimestampProperty()),
     ('last_seen', TimestampProperty()),
-    ('x_amitt_presumed_goals', StringProperty())
+    ('objective', StringProperty()),
+    ('external_references', ListProperty(ExternalReference)),
+    ('object_marking_refs', ListProperty(ReferenceProperty(valid_types='marking-definition', spec_version='2.0'))),
+    ('granular_markings', ListProperty(GranularMarking))
 ])
 class Narrative(object):
     def __init__(self, **kwargs):
@@ -55,7 +59,7 @@ class Narrative(object):
     ('object_marking_refs', ListProperty(ReferenceProperty(valid_types='marking-definition', spec_version='2.0'))),
     ('granular_markings', ListProperty(GranularMarking))
 ])
-class Narrative(object):
+class Incident(object):
     def __init__(self, **kwargs):
         if True:
             pass
@@ -80,6 +84,7 @@ class AmittStix:
         self.stix_campaign_uuid = {}
         self.stix_threat_actor_uuid = {}
         self.stix_identity_uuid = {}
+        self.stix_incident_uuid = {}
         self.stix_relationship_uuid = {}
         self.identity = None
         self.marking_definition = None
@@ -95,6 +100,7 @@ class AmittStix:
         self.campaigns = metadata['campaigns']
         self.intrusionsets = metadata['intrusionsets']
         self.identities = metadata['identities']
+        self.incidents = metadata['incidents']
         self.phases = metadata['phases']
         self.tasks = metadata['tasks']
         self.techniques = metadata['techniques']
@@ -108,9 +114,10 @@ class AmittStix:
         self.tacdict = self.make_object_dict(self.tactics)
 
         self.actors = self.actors.replace(np.nan, '', regex=True)
+        self.incidents = self.incidents.replace(np.nan, '', regex=True)
+        self.identities = self.identities.replace(np.nan, '', regex=True)
         self.campaigns = self.campaigns.replace(np.nan, '', regex=True)
         self.intrusionsets = self.intrusionsets.replace(np.nan, '', regex=True)
-        self.identities = self.identities.replace(np.nan, '', regex=True)
         self.relationships = self.relationships.replace(np.nan, '', regex=True)
         self.it = self.it.replace(np.nan, '', regex=True)
 
@@ -278,20 +285,70 @@ class AmittStix:
                     except IndexError:
                         pass
 
+                try:
+                    created_date = datetime.strptime(i.whenAdded, "%Y-%m-%d")
+                except:
+                    created_date = datetime.now()
+
                 intrusion_set = IntrusionSet(
                     name=i.name,
                     description=i.summary,
                     first_seen=datetime.strptime(str(int(i.firstSeen)), "%Y"),
+                    created=created_date,
                     custom_properties={
-                        "x_published": i.whenAdded,
-                        "x_source": i.sourceCountry,
-                        "x_target": i.targetCountry,
+                        # "x_published": i.whenAdded,
+                        # "x_source": i.sourceCountry,
+                        # "x_target": i.targetCountry,
                         "x_identified_via": i.foundVia
                     },
                     external_references=external_references
                 )
                 self.stix_objects.append(intrusion_set)
                 self.stix_intrusion_set_uuid[i.id] = intrusion_set.id
+
+    def amitt_incident(self):
+        """
+
+        """
+        incidents = self.incidents.itertuples()
+        for i in incidents:
+            print(i)
+            if i.id == "I00000":
+                continue
+            external_references = []
+            print(i.type)
+            if i.type == "incident":
+                refs = self.parse_xlsx_reference_tuples(i.references)
+                for ref in refs:
+                    try:
+                        reference = ExternalReference(
+                            source_name=ref[1],
+                            url=ref[2],
+                            external_id=ref[0]
+                        )
+                        external_references.append(reference)
+                    except IndexError:
+                        pass
+
+                try:
+                    created_date = datetime.strptime(i.whenAdded, "%Y-%m-%d")
+                except:
+                    created_date = datetime.now()
+
+                incident = Incident(
+                    name=i.name,
+                    description=i.summary,
+                    first_seen=datetime.strptime(str(int(i.firstSeen)), "%Y"),
+                    created=created_date,
+                    custom_properties={
+                        # "x_source": i.sourceCountry,
+                        # "x_target": i.targetCountry,
+                        "x_identified_via": i.foundVia
+                    },
+                    external_references=external_references
+                 )
+                self.stix_objects.append(incident)
+                self.stix_incident_uuid[i.id] = incident.id
 
     def amitt_campaign(self):
         """
@@ -302,6 +359,7 @@ class AmittStix:
             if i.id == "I00000":
                 continue
             external_references = []
+            print(i.type)
             if i.type == "campaign":
                 refs = self.parse_xlsx_reference_tuples(i.references)
                 for ref in refs:
@@ -315,14 +373,20 @@ class AmittStix:
                     except IndexError:
                         pass
 
+                try:
+                    created_date = datetime.strptime(i.whenAdded, "%Y-%m-%d")
+                except:
+                    created_date = datetime.now()
+
                 campaign = Campaign(
                     name=i.name,
                     description=i.summary,
                     first_seen=datetime.strptime(str(int(i.firstSeen)), "%Y"),
+                    created=created_date,
                     custom_properties={
-                        "x_published": i.whenAdded,
-                        "x_source": i.sourceCountry,
-                        "x_target": i.targetCountry,
+                        # "x_published": i.whenAdded,
+                        # "x_source": i.sourceCountry,
+                        # "x_target": i.targetCountry,
                         "x_identified_via": i.foundVia
                     },
                     external_references=external_references
@@ -339,6 +403,7 @@ class AmittStix:
             if i.id == "I00000":
                 continue
             external_references = []
+            print(i.type)
             if i.type == "threat-actor":
                 refs = self.parse_xlsx_reference_tuples(i.references)
                 for ref in refs:
@@ -352,14 +417,21 @@ class AmittStix:
                     except IndexError:
                         pass
 
+                try:
+                    created_date = datetime.strptime(i.whenAdded, "%Y-%m-%d")
+                except:
+                    created_date = datetime.now()
+
                 threat_actor = ThreatActor(
                     name=i.name,
                     description=i.summary,
-                    first_seen=datetime.strptime(str(int(i.firstSeen)), "%Y"),
+                    labels=i.labels.split(","),
+                    created=created_date,
                     custom_properties={
-                        "x_published": i.whenAdded,
-                        "x_source": i.sourceCountry,
-                        "x_target": i.targetCountry,
+                        # "x_published": i.whenAdded,
+                        # "x_first_seen": datetime.strptime(str(int(i.firstSeen)), "%Y"),
+                        # "x_source": i.sourceCountry,
+                        # "x_target": i.targetCountry,
                         "x_identified_via": i.foundVia
                     },
                     external_references=external_references
@@ -389,14 +461,20 @@ class AmittStix:
                     except IndexError:
                         pass
 
+                try:
+                    created_date = datetime.strptime(i.whenAdded, "%Y-%m-%d")
+                except:
+                    created_date = datetime.now()
+
                 identity = Identity(
                     name=i.name,
                     description=i.summary,
                     identity_class=i.identityClass,
                     sectors=i.sectors,
                     contact_information=i.contactInformation,
+                    created=created_date,
                     custom_properties={
-                        "x_published": i.whenAdded,
+                        # "x_published": i.whenAdded,
                         # "x_source": i.sourceCountry,
                         # "x_target": i.targetCountry,
                         "x_identified_via": i.foundVia
@@ -412,7 +490,8 @@ class AmittStix:
         """
         # Merge all UUID dictionaries.
         stix_objects = {**self.stix_campaign_uuid, **self.stix_intrusion_set_uuid, **self.stix_tactic_uuid,
-                        **self.stix_identity_uuid, **self.stix_technique_uuid, **self.stix_threat_actor_uuid}
+                        **self.stix_identity_uuid, **self.stix_technique_uuid, **self.stix_threat_actor_uuid,
+                        **self.stix_incident_uuid}
         for i in self.it.itertuples():
             if i.id == "I00000T000":
                 continue
@@ -425,7 +504,6 @@ class AmittStix:
                 )
                 self.stix_objects.append(relationship)
                 self.stix_relationship_uuid[i.id] = relationship.id
-
 
     def make_amitt_matrix(self):
         """
@@ -499,7 +577,11 @@ def main():
 
     stix_maker.make_amitt_matrix()
 
+    stix_maker.amitt_incident()
+
     stix_maker.amitt_campaign()
+
+    stix_maker.amitt_actor()
 
     stix_maker.amitt_intrusion_set()
 
@@ -512,11 +594,6 @@ def main():
     # print(stix_maker.stix_bundle())
 
     stix_maker.make_cti_file(stix_maker.stix_objects, bundle_name='amitt_attack')
-
-
-
-
-
 
 if __name__ == '__main__':
     main()
